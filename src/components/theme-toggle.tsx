@@ -1,25 +1,29 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
+import { useTheme } from "@teispace/next-themes";
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    return <button aria-label="Toggle theme" className="h-9 w-9" />;
+    return (
+      <button type="button" aria-label="Toggle theme" className="flex h-9 w-9 items-center justify-center border border-white/20 text-white">
+        <span className="h-[17px] w-[17px]" />
+      </button>
+    );
   }
 
-  const isDark = theme === "dark";
+  const isDark = resolvedTheme === "dark";
 
   return (
-    <button onClick={() => setTheme(isDark ? "light" : "dark")} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} className="flex h-9 w-9 items-center justify-center border border-white/20 text-white transition-colors hover:border-[#F97316] hover:text-[#F97316]">
+    <button type="button" onClick={() => setTheme(isDark ? "light" : "dark")} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} className="flex h-9 w-9 items-center justify-center border border-white/20 text-white transition-colors hover:border-[#F97316] hover:text-[#F97316]">
       {isDark ? <Sun size={17} /> : <Moon size={17} />}
     </button>
   );
