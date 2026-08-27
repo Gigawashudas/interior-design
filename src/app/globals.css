@@ -1,14 +1,12 @@
 @import "tailwindcss";
 
-@theme inline {
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-playfair);
-}
-
 :root {
   --background: #ffffff;
   --foreground: #111111;
   --orange: #f97316;
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-playfair);
 }
 
 .dark {
@@ -26,7 +24,11 @@ body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
 ::selection {
   background: #f97316;
-  color: white;
+  color: #ffffff;
 }
