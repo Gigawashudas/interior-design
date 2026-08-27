@@ -1,25 +1,51 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
+    const body = await request.json();
 
-    console.log("NEW INTERIOR DESIGN LEAD:", data);
+    const { name, phone, email, projectType, budget, location, message } = body;
+
+    if (!name || !phone || !projectType || !message) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Please fill in all required fields.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const lead = await prisma.lead.create({
+      data: {
+        name: String(name).trim(),
+        phone: String(phone).trim(),
+        email: email ? String(email).trim() : null,
+        projectType: String(projectType).trim(),
+        budget: budget ? String(budget).trim() : null,
+        location: location ? String(location).trim() : null,
+        message: String(message).trim(),
+      },
+    });
 
     return NextResponse.json(
       {
         success: true,
-        message: "Lead received successfully",
+        message: "Your inquiry has been received.",
+        leadId: lead.id,
       },
-      { status: 200 },
+      { status: 201 },
     );
-  } catch {
+  } catch (error) {
+    console.error("Lead submission error:", error);
+
     return NextResponse.json(
       {
         success: false,
-        message: "Invalid request",
+        message: "Something went wrong. Please try again.",
       },
-      { status: 400 },
+      { status: 500 },
     );
   }
 }

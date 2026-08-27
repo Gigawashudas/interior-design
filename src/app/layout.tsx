@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
+      <body className={`${inter.variable} ${playfair.variable}`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
