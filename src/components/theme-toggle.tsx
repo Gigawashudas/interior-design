@@ -15,7 +15,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button type="button" aria-label="Toggle theme" className="flex h-9 w-9 items-center justify-center border border-white/20 text-white">
-        <span className="h-[17px] w-[17px]" />
+        <span className="h-4.25 w-4.25" />
       </button>
     );
   }
