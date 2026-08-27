@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowUpRight, Menu, Star, X } from "lucide-react";
+import { LeadForm } from "@/components/lead-form";
 
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -283,23 +284,24 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section id="contact" className="bg-white text-[#111111]">
+      {/* CONTACT / LEAD FORM */}
+      <section id="contact" className="bg-white text-[#111111] dark:bg-[#111111] dark:text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
           <div className="border-t-4 border-[#F97316] pt-8 sm:pt-10">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">05 / Start a project</p>
 
-            <div className="mt-7 flex flex-col justify-between gap-10 lg:flex-row lg:items-end lg:gap-12">
-              <h2 className="font-display max-w-4xl text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl md:text-6xl lg:text-7xl">
-                Let&apos;s create a space
-                <br />
-                <span className="font-normal italic text-[#F97316]">worth coming home to.</span>
-              </h2>
+            <div className="mt-7 grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+              <div>
+                <h2 className="font-display text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
+                  Let&apos;s create a space
+                  <br />
+                  <span className="font-normal italic text-[#F97316]">worth coming home to.</span>
+                </h2>
 
-              <Link href="/contact" className="inline-flex w-full shrink-0 items-center justify-center gap-3 bg-[#111111] px-7 py-5 text-sm font-semibold text-white transition-colors hover:bg-[#F97316] sm:w-fit">
-                Get a free consultation
-                <ArrowUpRight size={17} />
-              </Link>
+                <p className="mt-7 max-w-md text-sm leading-7 text-black/50 dark:text-white/50">Tell us about your project and our team will get in touch to discuss your requirements, ideas, and next steps.</p>
+              </div>
+
+              <LeadForm />
             </div>
           </div>
         </div>
