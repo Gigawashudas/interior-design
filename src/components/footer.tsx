@@ -41,12 +41,12 @@ export function Footer() {
             <div className="mt-5 flex flex-col gap-3 text-sm text-white/60">
               <p>Dhaka, Bangladesh</p>
 
-              <a href="tel:+8801XXXXXXXXX" className="transition-colors hover:text-[#F97316]">
-                +880 1XXX-XXXXXX
+              <a href="tel:+8801810013848" className="transition-colors hover:text-[#F97316]">
+                +880 1810-013848
               </a>
 
-              <a href="mailto:hello@formspace.com" className="transition-colors hover:text-[#F97316]">
-                hello@formspace.com
+              <a href="mailto:hreevud@gmail.com" className="transition-colors hover:text-[#F97316]">
+                hreevud@gmail.com
               </a>
             </div>
           </div>
