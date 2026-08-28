@@ -59,10 +59,8 @@ const testimonials = [
 export default function Home() {
   return (
     <main className="min-h-screen bg-white text-[#111111] transition-colors duration-300 dark:bg-[#111111] dark:text-white">
-      {/* NAVIGATION */}
       <Navbar />
 
-      {/* HERO */}
       <section className="relative min-h-[90svh] overflow-hidden bg-[#111111] sm:min-h-[92vh]">
         <Image src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2200&q=90" alt="Modern luxury interior" fill priority sizes="100vw" className="object-cover" />
 
@@ -92,7 +90,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ABOUT PREVIEW */}
       <section className="bg-white px-5 py-20 transition-colors duration-300 sm:px-6 sm:py-24 lg:px-8 lg:py-36 dark:bg-[#111111]">
         <div className="mx-auto max-w-7xl">
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-24">
@@ -114,7 +111,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SERVICES PREVIEW */}
       <section className="bg-[#111111] text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <div className="mb-12 sm:mb-16">
@@ -148,8 +144,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PORTFOLIO PREVIEW */}
-      <section className="bg-white text-[#111111] dark:bg-white dark:text-[#111111]">
+      {/* SELECTED WORK */}
+      <section className="bg-white text-[#111111] transition-colors duration-300 dark:bg-[#111111] dark:text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <div className="mb-12 flex items-end justify-between sm:mb-14">
             <div>
@@ -158,7 +154,7 @@ export default function Home() {
               <h2 className="mt-4 font-display text-3xl font-medium leading-[1.05] tracking-[-0.035em] sm:text-4xl lg:text-5xl">Recent projects</h2>
             </div>
 
-            <Link href="/portfolio" className="hidden items-center gap-2 border-b border-black/30 pb-1 text-sm font-semibold transition-colors hover:border-[#F97316] sm:flex">
+            <Link href="/portfolio" className="hidden items-center gap-2 border-b border-black/30 pb-1 text-sm font-semibold transition-colors hover:border-[#F97316] dark:border-white/30 sm:flex">
               View all
               <ArrowUpRight size={15} className="text-[#F97316]" />
             </Link>
@@ -177,7 +173,7 @@ export default function Home() {
                   <div>
                     <h3 className="text-lg font-semibold tracking-tight sm:text-xl">{project.title}</h3>
 
-                    <p className="mt-1 text-sm text-black/50">{project.category}</p>
+                    <p className="mt-1 text-sm text-black/50 dark:text-white/50">{project.category}</p>
                   </div>
 
                   <ArrowUpRight size={20} strokeWidth={1.5} className="text-[#F97316]" />
@@ -187,7 +183,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10 sm:hidden">
-            <Link href="/portfolio" className="inline-flex items-center gap-2 text-sm font-semibold">
+            <Link href="/portfolio" className="inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[#F97316]">
               View all projects
               <ArrowUpRight size={16} className="text-[#F97316]" />
             </Link>
@@ -195,7 +191,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
       <section className="bg-[#111111] text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
@@ -228,7 +223,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CONTACT CTA */}
       <section className="bg-white text-[#111111] dark:bg-[#111111] dark:text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
           <div className="border-t-4 border-[#F97316] pt-8 sm:pt-10">
@@ -254,7 +248,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <Footer />
     </main>
   );
