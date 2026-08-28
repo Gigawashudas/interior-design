@@ -1,56 +1,30 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useState } from "react";
-
-function getInitialTheme(): boolean {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  const savedTheme = window.localStorage.getItem("theme");
-
-  if (savedTheme === "dark") {
-    document.documentElement.classList.add("dark");
-    return true;
-  }
-
-  if (savedTheme === "light") {
-    document.documentElement.classList.remove("dark");
-    return false;
-  }
-
-  const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-  if (systemDark) {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-
-  return systemDark;
-}
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(getInitialTheme);
-
   function toggleTheme() {
-    const newTheme = !isDark;
+    const root = document.documentElement;
+    const isDark = root.classList.contains("dark");
 
-    setIsDark(newTheme);
-
-    if (newTheme) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    if (isDark) {
+      root.classList.remove("dark");
       localStorage.setItem("theme", "light");
+    } else {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
     }
   }
 
   return (
-    <button type="button" onClick={toggleTheme} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} title={isDark ? "Switch to light mode" : "Switch to dark mode"} className="flex h-9 w-9 items-center justify-center text-white transition-colors hover:text-[#F97316]">
-      {isDark ? <Sun size={19} strokeWidth={1.5} /> : <Moon size={19} strokeWidth={1.5} />}
+    <button type="button" onClick={toggleTheme} aria-label="Toggle dark mode" className="flex h-9 w-9 items-center justify-center border border-black/10 text-[#111111] transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10 dark:text-white">
+      <span className="hidden dark:block">
+        <Sun size={16} strokeWidth={1.7} />
+      </span>
+
+      <span className="block dark:hidden">
+        <Moon size={16} strokeWidth={1.7} />
+      </span>
     </button>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, CheckCircle2, Clock3, Loader2, Mail, MapPin, Phone, RefreshCw, Users, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, CheckCircle2, Clock3, Loader2, Mail, MapPin, Phone, RefreshCw, Search, Users, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+
+import { ThemeToggle } from "@/components/theme-toggle";
 
 type LeadStatus = "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
 
@@ -20,6 +22,9 @@ type Lead = {
   updatedAt: string;
 };
 
+type StatusFilter = "ALL" | LeadStatus;
+type SortOrder = "NEWEST" | "OLDEST";
+
 const statuses: LeadStatus[] = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"];
 
 const statusStyles: Record<LeadStatus, string> = {
@@ -35,9 +40,30 @@ export default function AdminLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | LeadStatus>("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("NEWEST");
+
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+
+  async function fetchLeads(): Promise<Lead[]> {
+    const response = await fetch("/api/leads", {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to load leads (${response.status}).`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || "Failed to load leads.");
+    }
+
+    return Array.isArray(data.leads) ? data.leads : [];
+  }
 
   async function loadLeads(showRefresh = false) {
     try {
@@ -49,21 +75,9 @@ export default function AdminLeadsPage() {
 
       setError("");
 
-      const response = await fetch("/api/leads", {
-        cache: "no-store",
-      });
+      const data = await fetchLeads();
 
-      if (!response.ok) {
-        throw new Error(`Failed to load leads (${response.status}).`);
-      }
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.message || "Failed to load leads.");
-      }
-
-      setLeads(Array.isArray(data.leads) ? data.leads : []);
+      setLeads(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load leads.");
     } finally {
@@ -75,39 +89,25 @@ export default function AdminLeadsPage() {
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchInitialLeads() {
+    async function loadInitialLeads() {
       try {
         setError("");
 
-        const response = await fetch("/api/leads", {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`Failed to load leads (${response.status}).`);
-        }
-
-        const data = await response.json();
-
-        if (!data.success) {
-          throw new Error(data.message || "Failed to load leads.");
-        }
+        const data = await fetchLeads();
 
         if (!cancelled) {
-          setLeads(Array.isArray(data.leads) ? data.leads : []);
+          setLeads(data);
+          setLoading(false);
         }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : "Failed to load leads.");
-        }
-      } finally {
-        if (!cancelled) {
           setLoading(false);
         }
       }
     }
 
-    fetchInitialLeads();
+    loadInitialLeads();
 
     return () => {
       cancelled = true;
@@ -117,25 +117,41 @@ export default function AdminLeadsPage() {
   const filteredLeads = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return leads.filter((lead) => {
+    const filtered = leads.filter((lead) => {
       const matchesStatus = statusFilter === "ALL" || lead.status === statusFilter;
 
-      if (!matchesStatus) return false;
+      if (!matchesStatus) {
+        return false;
+      }
 
-      if (!query) return true;
+      if (!query) {
+        return true;
+      }
 
-      return [lead.name, lead.phone, lead.email, lead.projectType, lead.budget, lead.location, lead.message].filter(Boolean).some((value) => String(value).toLowerCase().includes(query));
+      const searchableValues = [lead.name, lead.phone, lead.email, lead.projectType, lead.budget, lead.location, lead.message, lead.status];
+
+      return searchableValues.filter(Boolean).some((value) => String(value).toLowerCase().includes(query));
     });
-  }, [leads, search, statusFilter]);
 
-  const counts = {
-    total: leads.length,
-    new: leads.filter((lead) => lead.status === "NEW").length,
-    contacted: leads.filter((lead) => lead.status === "CONTACTED").length,
-    qualified: leads.filter((lead) => lead.status === "QUALIFIED").length,
-    converted: leads.filter((lead) => lead.status === "CONVERTED").length,
-    lost: leads.filter((lead) => lead.status === "LOST").length,
-  };
+    return [...filtered].sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+
+      return sortOrder === "NEWEST" ? dateB - dateA : dateA - dateB;
+    });
+  }, [leads, search, statusFilter, sortOrder]);
+
+  const counts = useMemo(
+    () => ({
+      total: leads.length,
+      new: leads.filter((lead) => lead.status === "NEW").length,
+      contacted: leads.filter((lead) => lead.status === "CONTACTED").length,
+      qualified: leads.filter((lead) => lead.status === "QUALIFIED").length,
+      converted: leads.filter((lead) => lead.status === "CONVERTED").length,
+      lost: leads.filter((lead) => lead.status === "LOST").length,
+    }),
+    [leads],
+  );
 
   function formatDate(date: string) {
     return new Intl.DateTimeFormat("en-BD", {
@@ -152,33 +168,52 @@ export default function AdminLeadsPage() {
     }).format(new Date(date));
   }
 
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("ALL");
+    setSortOrder("NEWEST");
+  }
+
+  const hasFilters = search.trim() !== "" || statusFilter !== "ALL" || sortOrder !== "NEWEST";
+
   return (
     <main className="min-h-screen bg-white text-[#111111] transition-colors duration-300 dark:bg-[#111111] dark:text-white">
+      {/* HEADER */}
       <header className="sticky top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-[#111111]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
+          {/* BRAND */}
           <div>
             <Link href="/" className="text-lg font-bold tracking-tighter sm:text-xl">
-              FORM<span className="text-[#F97316]">/</span>SPACE
+              FORM
+              <span className="text-[#F97316]">/</span>
+              SPACE
             </Link>
 
             <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">Admin / Leads</p>
           </div>
 
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={() => loadLeads(true)} disabled={refreshing} className="flex h-9 items-center gap-2 border border-black/10 px-3 text-xs font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10">
+          {/* HEADER ACTIONS */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+
+            <button type="button" onClick={() => loadLeads(true)} disabled={refreshing} aria-label="Refresh leads" className="flex h-9 items-center justify-center gap-2 border border-black/10 px-3 text-xs font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/10">
               <RefreshCw size={14} className={refreshing ? "animate-spin" : ""} />
+
               <span className="hidden sm:inline">Refresh</span>
             </button>
 
-            <Link href="/" className="flex h-9 items-center gap-2 border border-black/10 px-3 text-xs font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10">
+            <Link href="/" aria-label="Go to website" className="flex h-9 items-center justify-center gap-2 border border-black/10 px-3 text-xs font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10">
               <ArrowLeft size={14} />
+
               <span className="hidden sm:inline">Website</span>
             </Link>
           </div>
         </div>
       </header>
 
+      {/* MAIN */}
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
+        {/* PAGE INTRO */}
         <div className="border-t-4 border-[#F97316] pt-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">Lead management</p>
 
@@ -195,6 +230,7 @@ export default function AdminLeadsPage() {
           </div>
         </div>
 
+        {/* STATISTICS */}
         <div className="mt-10 grid grid-cols-2 border-t border-black/10 dark:border-white/10 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Total" value={counts.total} icon={<Users size={17} />} />
 
@@ -209,10 +245,17 @@ export default function AdminLeadsPage() {
           <StatCard label="Lost" value={counts.lost} icon={<XCircle size={17} />} active={statusFilter === "LOST"} onClick={() => setStatusFilter(statusFilter === "LOST" ? "ALL" : "LOST")} />
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-y border-black/10 py-4 dark:border-white/10 sm:flex-row">
-          <input type="search" placeholder="Search leads..." value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 border border-black/10 bg-transparent px-4 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/10 dark:placeholder:text-white/30" />
+        {/* FILTERS */}
+        <div className="mt-10 flex flex-col gap-3 border-y border-black/10 py-4 dark:border-white/10 lg:flex-row">
+          {/* SEARCH */}
+          <div className="relative min-w-0 flex-1">
+            <Search size={17} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-black/30 dark:text-white/30" />
 
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "ALL" | LeadStatus)} className="border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-[#F97316] dark:border-white/10 dark:bg-[#111111]">
+            <input type="search" placeholder="Search name, phone, email, project..." value={search} onChange={(event) => setSearch(event.target.value)} className="w-full border border-black/10 bg-transparent py-3 pl-11 pr-4 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/10 dark:placeholder:text-white/30" />
+          </div>
+
+          {/* STATUS */}
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as StatusFilter)} className="border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-[#F97316] dark:border-white/10 dark:bg-[#111111]">
             <option value="ALL">All statuses</option>
 
             {statuses.map((status) => (
@@ -221,10 +264,26 @@ export default function AdminLeadsPage() {
               </option>
             ))}
           </select>
+
+          {/* SORT */}
+          <select value={sortOrder} onChange={(event) => setSortOrder(event.target.value as SortOrder)} className="border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:border-[#F97316] dark:border-white/10 dark:bg-[#111111]">
+            <option value="NEWEST">Newest first</option>
+
+            <option value="OLDEST">Oldest first</option>
+          </select>
+
+          {/* CLEAR */}
+          {hasFilters && (
+            <button type="button" onClick={clearFilters} className="border border-black/10 px-4 py-3 text-sm font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10">
+              Clear
+            </button>
+          )}
         </div>
 
+        {/* ERROR */}
         {error && <div className="mt-6 border border-red-500/20 bg-red-500/5 px-4 py-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
+        {/* CONTENT */}
         {loading ? (
           <div className="flex min-h-60 items-center justify-center">
             <Loader2 size={28} className="animate-spin text-[#F97316]" />
@@ -233,27 +292,40 @@ export default function AdminLeadsPage() {
           <div className="mt-8 border border-black/10 px-6 py-16 text-center dark:border-white/10">
             <p className="font-display text-2xl">No leads found.</p>
 
-            <p className="mt-2 text-sm text-black/40 dark:text-white/40">Try changing your search or status filter.</p>
+            <p className="mt-2 text-sm text-black/40 dark:text-white/40">{hasFilters ? "Try changing your search or filters." : "There are no project inquiries yet."}</p>
+
+            {hasFilters && (
+              <button type="button" onClick={clearFilters} className="mt-6 text-sm font-semibold text-[#F97316] transition-opacity hover:opacity-70">
+                Clear filters
+              </button>
+            )}
           </div>
         ) : (
           <>
+            {/* DESKTOP TABLE */}
             <div className="mt-8 hidden overflow-hidden border border-black/10 dark:border-white/10 lg:block">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-black/10 bg-black/2 text-[10px] font-semibold uppercase tracking-[0.16em] dark:border-white/10 dark:bg-white/2">
+                  <tr className="border-b border-black/10 bg-black/[0.02] text-[10px] font-semibold uppercase tracking-[0.16em] dark:border-white/10 dark:bg-white/[0.02]">
                     <th className="px-5 py-4">Client</th>
+
                     <th className="px-5 py-4">Project</th>
+
                     <th className="px-5 py-4">Budget</th>
+
                     <th className="px-5 py-4">Location</th>
+
                     <th className="px-5 py-4">Date</th>
+
                     <th className="px-5 py-4">Status</th>
+
                     <th className="px-5 py-4" />
                   </tr>
                 </thead>
 
                 <tbody>
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="group border-b border-black/10 transition-colors last:border-0 hover:bg-black/2 dark:border-white/10 dark:hover:bg-white/2">
+                    <tr key={lead.id} className="group border-b border-black/10 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/10 dark:hover:bg-white/[0.02]">
                       <td className="px-5 py-5">
                         <p className="font-semibold">{lead.name}</p>
 
@@ -293,6 +365,7 @@ export default function AdminLeadsPage() {
               </table>
             </div>
 
+            {/* MOBILE CARDS */}
             <div className="mt-8 grid gap-4 lg:hidden">
               {filteredLeads.map((lead) => (
                 <button key={lead.id} type="button" onClick={() => setSelectedLead(lead)} className="w-full border border-black/10 p-5 text-left transition-colors hover:border-[#F97316] dark:border-white/10">
@@ -307,29 +380,13 @@ export default function AdminLeadsPage() {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-4 border-t border-black/10 pt-4 dark:border-white/10">
-                    <div>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">Project</p>
+                    <MobileDetail label="Project" value={lead.projectType} />
 
-                      <p className="mt-1 text-sm">{lead.projectType}</p>
-                    </div>
+                    <MobileDetail label="Budget" value={lead.budget || "Not specified"} />
 
-                    <div>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">Budget</p>
+                    <MobileDetail label="Location" value={lead.location || "Not specified"} />
 
-                      <p className="mt-1 text-sm">{lead.budget || "Not specified"}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">Location</p>
-
-                      <p className="mt-1 text-sm">{lead.location || "Not specified"}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">Received</p>
-
-                      <p className="mt-1 text-sm">{formatDate(lead.createdAt)}</p>
-                    </div>
+                    <MobileDetail label="Received" value={formatDate(lead.createdAt)} />
                   </div>
                 </button>
               ))}
@@ -338,9 +395,11 @@ export default function AdminLeadsPage() {
         )}
       </div>
 
+      {/* LEAD DETAILS MODAL */}
       {selectedLead && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-5" onClick={() => setSelectedLead(null)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-5" onClick={() => setSelectedLead(null)} role="presentation">
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-white text-[#111111] dark:bg-[#181818] dark:text-white" onClick={(event) => event.stopPropagation()}>
+            {/* MODAL HEADER */}
             <div className="flex items-start justify-between border-b border-black/10 p-6 dark:border-white/10 sm:p-8">
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#F97316]">Lead details</p>
@@ -357,6 +416,7 @@ export default function AdminLeadsPage() {
               </button>
             </div>
 
+            {/* MODAL CONTENT */}
             <div className="space-y-7 p-6 sm:p-8">
               <div className="grid gap-5 sm:grid-cols-2">
                 <DetailItem icon={<Phone size={16} />} label="Phone" value={selectedLead.phone} href={`tel:${selectedLead.phone}`} />
@@ -372,12 +432,14 @@ export default function AdminLeadsPage() {
                 <DetailItem label="Received" value={`${formatDate(selectedLead.createdAt)} at ${formatTime(selectedLead.createdAt)}`} />
               </div>
 
+              {/* MESSAGE */}
               <div className="border-t border-black/10 pt-6 dark:border-white/10">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">Message</p>
 
                 <p className="mt-4 whitespace-pre-wrap text-sm leading-7">{selectedLead.message}</p>
               </div>
 
+              {/* STATUS */}
               <div className="border-t border-black/10 pt-6 dark:border-white/10">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">Current status</p>
 
@@ -395,6 +457,10 @@ export default function AdminLeadsPage() {
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/* STAT CARD */
+/* -------------------------------------------------------------------------- */
+
 function StatCard({ label, value, icon, active = false, onClick }: { label: string; value: number; icon?: React.ReactNode; active?: boolean; onClick?: () => void }) {
   const content = (
     <>
@@ -410,7 +476,7 @@ function StatCard({ label, value, icon, active = false, onClick }: { label: stri
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={`border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${active ? "bg-[#F97316]/5" : "hover:bg-black/2 dark:hover:bg-white/2"}`}>
+      <button type="button" onClick={onClick} className={`border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${active ? "bg-[#F97316]/5" : "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"}`}>
         {content}
       </button>
     );
@@ -419,9 +485,31 @@ function StatCard({ label, value, icon, active = false, onClick }: { label: stri
   return <div className="border-b border-r border-black/10 px-4 py-5 dark:border-white/10 sm:px-5">{content}</div>;
 }
 
+/* -------------------------------------------------------------------------- */
+/* STATUS BADGE */
+/* -------------------------------------------------------------------------- */
+
 function StatusBadge({ status }: { status: LeadStatus }) {
   return <span className={`inline-flex px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] ${statusStyles[status]}`}>{status}</span>;
 }
+
+/* -------------------------------------------------------------------------- */
+/* MOBILE DETAIL */
+/* -------------------------------------------------------------------------- */
+
+function MobileDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">{label}</p>
+
+      <p className="mt-1 text-sm">{value}</p>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* DETAIL ITEM */
+/* -------------------------------------------------------------------------- */
 
 function DetailItem({ icon, label, value, href }: { icon?: React.ReactNode; label: string; value: string; href?: string }) {
   const content = (
@@ -432,7 +520,7 @@ function DetailItem({ icon, label, value, href }: { icon?: React.ReactNode; labe
         <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">{label}</span>
       </div>
 
-      <p className="mt-2 wrap-break-word text-sm font-medium">{value}</p>
+      <p className="mt-2 break-words text-sm font-medium">{value}</p>
     </>
   );
 
