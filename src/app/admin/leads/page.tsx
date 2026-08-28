@@ -708,64 +708,63 @@ FORM<span className="text-[#F97316]">/</span>SPACE
 }
 
 function StatCard({
-label,
-value,
-icon,
-active = false,
-onClick,
+  label,
+  value,
+  icon,
+  active = false,
+  onClick,
 }: {
-label: string;
-value: number;
-icon?: React.ReactNode;
-active?: boolean;
-onClick?: () => void;
+  label: string;
+  value: string | number;
+  icon?: React.ReactNode;
+  active?: boolean;
+  onClick?: () => void;
 }) {
-const content = (
-<>
-<div className="flex items-center justify-between">
-<span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">
-{label}
-</span>
+  const content = (
+    <>
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">
+          {label}
+        </span>
 
-    {icon && (
-      <span className="text-[#F97316]">{icon}</span>
-    )}
-  </div>
+        {icon && <span className="text-[#F97316]">{icon}</span>}
+      </div>
 
-  <p className="mt-3 font-display text-3xl font-medium tracking-tight">
-    {value}
-  </p>
-</>
+      <p className="mt-3 font-display text-3xl font-medium tracking-tight">
+        {value}
+      </p>
+    </>
+  );
 
-);
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${
+          active ? "bg-[#F97316]/5" : "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"
+        }`}
+      >
+        {content}
+      </button>
+    );
+  }
 
-if (onClick) {
-return (
-<button
-type="button"
-onClick={onClick}
-className={border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${ active ? "bg-[#F97316]/5" : "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]" }}
->
-{content}
-</button>
-);
-}
-
-return (
-<div className="border-b border-r border-black/10 px-4 py-5 dark:border-white/10 sm:px-5">
-{content}
-</div>
-);
+  return (
+    <div className="border-b border-r border-black/10 px-4 py-5 dark:border-white/10 sm:px-5">
+      {content}
+    </div>
+  );
 }
 
 function StatusBadge({ status }: { status: LeadStatus }) {
-return (
-<span
-className={inline-flex px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] ${statusStyles[status]}}
->
-{status}
-</span>
-);
+  return (
+    <span
+      className={`inline-flex px-2.5 py-1 text-[9px] font-bold tracking-[0.08em] ${statusStyles[status]}`}
+    >
+      {status}
+    </span>
+  );
 }
 
 function DetailItem({

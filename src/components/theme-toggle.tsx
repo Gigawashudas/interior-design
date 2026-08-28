@@ -1,46 +1,52 @@
 "use client";
 
 import { Moon, Sun } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
-function getInitialDarkMode() {
-  if (typeof window === "undefined") {
-    return false;
+const THEME_KEY = "theme";
+
+function getTheme(): "light" | "dark" {
+  if (typeof document === "undefined") {
+    return "light";
   }
 
-  const savedTheme = window.localStorage.getItem("theme");
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
 
-  if (savedTheme === "dark") {
-    return true;
-  }
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
 
-  if (savedTheme === "light") {
-    return false;
-  }
+  return () => {
+    window.removeEventListener("storage", callback);
+  };
+}
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+function getServerSnapshot() {
+  return "light" as const;
+}
+
+function getClientSnapshot() {
+  return getTheme();
 }
 
 export function ThemeToggle() {
-  const [isDark, setIsDark] = useState(getInitialDarkMode);
+  const theme = useSyncExternalStore(subscribe, getClientSnapshot, getServerSnapshot);
 
-  function toggleTheme() {
-    const nextIsDark = !isDark;
+  const isDark = theme === "dark";
 
-    setIsDark(nextIsDark);
+  const toggleTheme = useCallback(() => {
+    const nextTheme = isDark ? "light" : "dark";
 
-    if (nextIsDark) {
-      document.documentElement.classList.add("dark");
-      window.localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      window.localStorage.setItem("theme", "light");
-    }
-  }
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+
+    localStorage.setItem(THEME_KEY, nextTheme);
+
+    window.dispatchEvent(new Event("storage"));
+  }, [isDark]);
 
   return (
     <button type="button" onClick={toggleTheme} aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"} title={isDark ? "Switch to light mode" : "Switch to dark mode"} className="flex h-9 w-9 items-center justify-center border border-black/10 bg-transparent text-[#111111] transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/10 dark:text-white">
-      {isDark ? <Sun size={16} /> : <Moon size={16} />}{" "}
+      {isDark ? <Sun size={16} /> : <Moon size={16} />}
     </button>
   );
 }
