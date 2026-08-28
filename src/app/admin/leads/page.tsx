@@ -53,13 +53,17 @@ export default function AdminLeadsPage() {
         cache: "no-store",
       });
 
+      if (!response.ok) {
+        throw new Error(`Failed to load leads (${response.status}).`);
+      }
+
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         throw new Error(data.message || "Failed to load leads.");
       }
 
-      setLeads(data.leads);
+      setLeads(Array.isArray(data.leads) ? data.leads : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load leads.");
     } finally {
@@ -69,7 +73,45 @@ export default function AdminLeadsPage() {
   }
 
   useEffect(() => {
-    loadLeads();
+    let cancelled = false;
+
+    async function fetchInitialLeads() {
+      try {
+        setError("");
+
+        const response = await fetch("/api/leads", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load leads (${response.status}).`);
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.message || "Failed to load leads.");
+        }
+
+        if (!cancelled) {
+          setLeads(Array.isArray(data.leads) ? data.leads : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load leads.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchInitialLeads();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredLeads = useMemo(() => {
@@ -82,7 +124,7 @@ export default function AdminLeadsPage() {
 
       if (!query) return true;
 
-      return [lead.name, lead.phone, lead.email, lead.projectType, lead.budget, lead.location, lead.message].filter(Boolean).some((value) => value!.toLowerCase().includes(query));
+      return [lead.name, lead.phone, lead.email, lead.projectType, lead.budget, lead.location, lead.message].filter(Boolean).some((value) => String(value).toLowerCase().includes(query));
     });
   }, [leads, search, statusFilter]);
 
@@ -112,7 +154,6 @@ export default function AdminLeadsPage() {
 
   return (
     <main className="min-h-screen bg-white text-[#111111] transition-colors duration-300 dark:bg-[#111111] dark:text-white">
-      {/* HEADER */}
       <header className="sticky top-0 z-40 border-b border-black/10 bg-white/95 backdrop-blur dark:border-white/10 dark:bg-[#111111]/95">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
           <div>
@@ -137,9 +178,7 @@ export default function AdminLeadsPage() {
         </div>
       </header>
 
-      {/* CONTENT */}
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
-        {/* TITLE */}
         <div className="border-t-4 border-[#F97316] pt-6">
           <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">Lead management</p>
 
@@ -156,7 +195,6 @@ export default function AdminLeadsPage() {
           </div>
         </div>
 
-        {/* STATS */}
         <div className="mt-10 grid grid-cols-2 border-t border-black/10 dark:border-white/10 sm:grid-cols-3 lg:grid-cols-6">
           <StatCard label="Total" value={counts.total} icon={<Users size={17} />} />
 
@@ -171,7 +209,6 @@ export default function AdminLeadsPage() {
           <StatCard label="Lost" value={counts.lost} icon={<XCircle size={17} />} active={statusFilter === "LOST"} onClick={() => setStatusFilter(statusFilter === "LOST" ? "ALL" : "LOST")} />
         </div>
 
-        {/* FILTERS */}
         <div className="mt-10 flex flex-col gap-3 border-y border-black/10 py-4 dark:border-white/10 sm:flex-row">
           <input type="search" placeholder="Search leads..." value={search} onChange={(event) => setSearch(event.target.value)} className="min-w-0 flex-1 border border-black/10 bg-transparent px-4 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/10 dark:placeholder:text-white/30" />
 
@@ -186,10 +223,8 @@ export default function AdminLeadsPage() {
           </select>
         </div>
 
-        {/* ERROR */}
         {error && <div className="mt-6 border border-red-500/20 bg-red-500/5 px-4 py-4 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
-        {/* LOADING */}
         {loading ? (
           <div className="flex min-h-60 items-center justify-center">
             <Loader2 size={28} className="animate-spin text-[#F97316]" />
@@ -202,11 +237,10 @@ export default function AdminLeadsPage() {
           </div>
         ) : (
           <>
-            {/* DESKTOP TABLE */}
             <div className="mt-8 hidden overflow-hidden border border-black/10 dark:border-white/10 lg:block">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="border-b border-black/10 bg-black/[0.02] text-[10px] font-semibold uppercase tracking-[0.16em] dark:border-white/10 dark:bg-white/[0.02]">
+                  <tr className="border-b border-black/10 bg-black/2 text-[10px] font-semibold uppercase tracking-[0.16em] dark:border-white/10 dark:bg-white/2">
                     <th className="px-5 py-4">Client</th>
                     <th className="px-5 py-4">Project</th>
                     <th className="px-5 py-4">Budget</th>
@@ -219,9 +253,10 @@ export default function AdminLeadsPage() {
 
                 <tbody>
                   {filteredLeads.map((lead) => (
-                    <tr key={lead.id} className="group border-b border-black/10 transition-colors last:border-0 hover:bg-black/[0.02] dark:border-white/10 dark:hover:bg-white/[0.02]">
+                    <tr key={lead.id} className="group border-b border-black/10 transition-colors last:border-0 hover:bg-black/2 dark:border-white/10 dark:hover:bg-white/2">
                       <td className="px-5 py-5">
                         <p className="font-semibold">{lead.name}</p>
+
                         <p className="mt-1 text-xs text-black/40 dark:text-white/40">{lead.phone}</p>
                       </td>
 
@@ -239,6 +274,7 @@ export default function AdminLeadsPage() {
 
                       <td className="px-5 py-5">
                         <p className="text-sm">{formatDate(lead.createdAt)}</p>
+
                         <p className="mt-1 text-xs text-black/40 dark:text-white/40">{formatTime(lead.createdAt)}</p>
                       </td>
 
@@ -257,7 +293,6 @@ export default function AdminLeadsPage() {
               </table>
             </div>
 
-            {/* MOBILE / TABLET CARDS */}
             <div className="mt-8 grid gap-4 lg:hidden">
               {filteredLeads.map((lead) => (
                 <button key={lead.id} type="button" onClick={() => setSelectedLead(lead)} className="w-full border border-black/10 p-5 text-left transition-colors hover:border-[#F97316] dark:border-white/10">
@@ -303,7 +338,6 @@ export default function AdminLeadsPage() {
         )}
       </div>
 
-      {/* DETAIL MODAL */}
       {selectedLead && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-5" onClick={() => setSelectedLead(null)}>
           <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto bg-white text-[#111111] dark:bg-[#181818] dark:text-white" onClick={(event) => event.stopPropagation()}>
@@ -376,7 +410,7 @@ function StatCard({ label, value, icon, active = false, onClick }: { label: stri
 
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} className={`border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${active ? "bg-[#F97316]/5" : "hover:bg-black/[0.02] dark:hover:bg-white/[0.02]"}`}>
+      <button type="button" onClick={onClick} className={`border-b border-r border-black/10 px-4 py-5 text-left transition-colors dark:border-white/10 sm:px-5 ${active ? "bg-[#F97316]/5" : "hover:bg-black/2 dark:hover:bg-white/2"}`}>
         {content}
       </button>
     );
@@ -394,10 +428,11 @@ function DetailItem({ icon, label, value, href }: { icon?: React.ReactNode; labe
     <>
       <div className="flex items-center gap-2 text-[#F97316]">
         {icon}
+
         <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/40">{label}</span>
       </div>
 
-      <p className="mt-2 break-words text-sm font-medium">{value}</p>
+      <p className="mt-2 wrap-break-word text-sm font-medium">{value}</p>
     </>
   );
 
