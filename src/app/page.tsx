@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight, Star } from "lucide-react";
 
-import { LeadForm } from "@/components/lead-form";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 
@@ -150,7 +149,7 @@ export default function Home() {
       </section>
 
       {/* PORTFOLIO PREVIEW */}
-      <section className="bg-white text-[#111111]">
+      <section className="bg-white text-[#111111] dark:bg-white dark:text-[#111111]">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-32">
           <div className="mb-12 flex items-end justify-between sm:mb-14">
             <div>
@@ -229,14 +228,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CONTACT PREVIEW */}
+      {/* CONTACT CTA */}
       <section className="bg-white text-[#111111] dark:bg-[#111111] dark:text-white">
         <div className="mx-auto max-w-7xl px-5 py-20 sm:px-6 sm:py-24 lg:px-8 lg:py-36">
           <div className="border-t-4 border-[#F97316] pt-8 sm:pt-10">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">05 / Start a project</p>
 
-            <div className="mt-7 grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
-              <div>
+            <div className="mt-7 flex flex-col justify-between gap-10 lg:flex-row lg:items-end">
+              <div className="max-w-3xl">
                 <h2 className="font-display text-4xl font-medium leading-[0.98] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
                   Let&apos;s create a space
                   <br />
@@ -244,14 +243,12 @@ export default function Home() {
                 </h2>
 
                 <p className="mt-7 max-w-md text-sm leading-7 text-black/50 dark:text-white/50">Tell us about your project and our team will get in touch to discuss your requirements, ideas, and next steps.</p>
-
-                <Link href="/contact" className="mt-7 inline-flex items-center gap-2 text-sm font-semibold transition-colors hover:text-[#F97316]">
-                  Go to contact page
-                  <ArrowUpRight size={16} className="text-[#F97316]" />
-                </Link>
               </div>
 
-              <LeadForm />
+              <Link href="/contact" className="inline-flex w-fit items-center gap-3 bg-[#111111] px-7 py-5 text-sm font-semibold text-white transition-colors hover:bg-[#F97316] dark:bg-white dark:text-[#111111] dark:hover:bg-[#F97316] dark:hover:text-white">
+                Start your project
+                <ArrowUpRight size={17} />
+              </Link>
             </div>
           </div>
         </div>

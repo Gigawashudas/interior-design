@@ -1,21 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
-
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "FORM/SPACE | Interior Architecture & Design",
-  description: "Interior architecture and design studio creating thoughtful spaces.",
+  title: "FORM/SPACE — Interior Architecture & Design",
+  description: "Interior architecture and design studio creating thoughtful spaces across Bangladesh.",
 };
 
 export default function RootLayout({
@@ -25,9 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${playfair.variable}`}>
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
