@@ -65,7 +65,7 @@ export function Navbar() {
 
       {/* MOBILE MENU */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[60] min-h-screen bg-[#111111] px-5 py-6 text-white sm:px-6">
+        <div className="fixed inset-0 z-60 min-h-screen bg-[#111111] px-5 py-6 text-white sm:px-6">
           {/* MOBILE HEADER */}
           <div className="flex items-center justify-between">
             <Link href="/" onClick={closeMenu} className="text-lg font-bold tracking-tighter">
