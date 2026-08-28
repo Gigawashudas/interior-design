@@ -25,7 +25,6 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#111111]/90 backdrop-blur-md">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-6 sm:px-6 lg:px-8 lg:py-7">
-        mithila
         {/* LOGO */}
         <Link href="/" onClick={closeMenu} className="text-lg font-bold tracking-tighter text-white sm:text-xl">
           FORM<span className="text-[#F97316]">/</span>SPACE
