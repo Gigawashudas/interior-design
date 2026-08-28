@@ -220,7 +220,7 @@ git clone YOUR_REPOSITORY_URL
 ### 2. Enter the project
 
 ```bash
-cd form-space
+cd interior-design
 ```
 
 ### 3. Install dependencies
