@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-const validStatuses = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
-type LeadStatus = (typeof validStatuses)[number];
+const VALID_STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "LOST"] as const;
+type LeadStatus = (typeof VALID_STATUSES)[number];
 export async function GET() {
   try {
     const leads = await prisma.lead.findMany({ orderBy: { createdAt: "desc" } });
@@ -32,12 +32,8 @@ export async function PATCH(request: Request) {
     if (!id || !status) {
       return NextResponse.json({ success: false, message: "Lead ID and status are required." }, { status: 400 });
     }
-    if (!validStatuses.includes(status as LeadStatus)) {
+    if (!VALID_STATUSES.includes(status as LeadStatus)) {
       return NextResponse.json({ success: false, message: "Invalid lead status." }, { status: 400 });
-    }
-    const existingLead = await prisma.lead.findUnique({ where: { id: String(id) } });
-    if (!existingLead) {
-      return NextResponse.json({ success: false, message: "Lead not found." }, { status: 404 });
     }
     const lead = await prisma.lead.update({ where: { id: String(id) }, data: { status: status as LeadStatus } });
     return NextResponse.json({ success: true, message: "Lead status updated.", lead });

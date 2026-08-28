@@ -1,4 +1,3 @@
-```css
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -30,4 +29,3 @@ html.dark body {
 * {
   box-sizing: border-box;
 }
-```
