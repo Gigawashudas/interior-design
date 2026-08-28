@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 
-import Navbar from "@/components/navbar";
+import { Navbar } from "@/components/navbar";
 import Footer from "@/components/footer";
 
 const projects = [

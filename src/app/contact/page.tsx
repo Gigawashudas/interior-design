@@ -1,8 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowUpRight, CheckCircle2, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, CheckCircle2, Loader2 } from "lucide-react";
 import { FormEvent, useState } from "react";
+
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 const projectTypes = ["Residential Design", "Commercial Spaces", "3D Visualization", "Renovation", "Other"];
 
@@ -45,41 +47,50 @@ export default function ContactPage() {
 
       const result = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !result.success) {
         throw new Error(result.message || "Something went wrong.");
       }
 
       // 2. Send email notification through Web3Forms
-      const emailResponse = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          access_key: process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY,
+      const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
 
-          subject: `New Lead: ${data.name} — ${data.projectType}`,
+      if (accessKey) {
+        try {
+          const emailResponse = await fetch("https://api.web3forms.com/submit", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              access_key: accessKey,
+              subject: `New Lead: ${data.name} — ${data.projectType}`,
+              from_name: "FORM/SPACE Website",
 
-          from_name: "FORM/SPACE Website",
+              name: data.name,
+              phone: data.phone,
+              email: data.email,
+              projectType: data.projectType,
+              budget: data.budget,
+              location: data.location,
+              message: data.message,
+            }),
+          });
 
-          name: data.name,
-          phone: data.phone,
-          email: data.email,
-          projectType: data.projectType,
-          budget: data.budget,
-          location: data.location,
-          message: data.message,
-        }),
-      });
+          const emailResult = await emailResponse.json();
 
-      const emailResult = await emailResponse.json();
-
-      if (!emailResult.success) {
-        console.error("Web3Forms email error:", emailResult);
+          if (!emailResult.success) {
+            console.error("Web3Forms email error:", emailResult);
+          }
+        } catch (emailError) {
+          // Email failure should not make the lead submission fail.
+          console.error("Web3Forms request failed:", emailError);
+        }
+      } else {
+        console.warn("NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is not configured.");
       }
 
-      // 3. Show success even if email notification fails
+      // 3. Show success
       setSuccess(true);
       form.reset();
     } catch (err) {
@@ -91,24 +102,13 @@ export default function ContactPage() {
 
   return (
     <main className="min-h-screen bg-white text-[#111111] transition-colors dark:bg-[#111111] dark:text-white">
-      {/* Header */}
-      <header className="border-b border-black/10 dark:border-white/10">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
-          <Link href="/" className="text-lg font-bold tracking-tighter sm:text-xl">
-            FORM<span className="text-[#F97316]">/</span>SPACE
-          </Link>
+      {/* NAVBAR */}
+      <Navbar />
 
-          <Link href="/" className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#F97316]">
-            <ArrowLeft size={16} />
-            Back home
-          </Link>
-        </div>
-      </header>
-
-      {/* Content */}
+      {/* CONTACT CONTENT */}
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
         <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
-          {/* Intro */}
+          {/* INTRO */}
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">Start a project</p>
 
@@ -124,14 +124,18 @@ export default function ContactPage() {
               <p className="mt-3 text-sm leading-6">
                 Dhaka, Bangladesh
                 <br />
-                +880 1XXX-XXXXXX
+                <a href="tel:+8801810013848" className="transition-colors hover:text-[#F97316]">
+                  +880 1810-013848
+                </a>
                 <br />
-                hello@formspace.com
+                <a href="mailto:hreevud@gmail.com" className="transition-colors hover:text-[#F97316]">
+                  hreevud@gmail.com
+                </a>
               </p>
             </div>
           </div>
 
-          {/* Form */}
+          {/* FORM */}
           <div>
             {success ? (
               <div className="border-t-4 border-[#F97316] pt-8">
@@ -149,7 +153,7 @@ export default function ContactPage() {
             ) : (
               <form onSubmit={handleSubmit} className="border-t-4 border-[#F97316] pt-8">
                 <div className="grid gap-7 sm:grid-cols-2">
-                  {/* Name */}
+                  {/* NAME */}
                   <div>
                     <label htmlFor="name" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Name *
@@ -158,7 +162,7 @@ export default function ContactPage() {
                     <input id="name" name="name" type="text" required placeholder="Your name" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
-                  {/* Phone */}
+                  {/* PHONE */}
                   <div>
                     <label htmlFor="phone" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Phone *
@@ -167,7 +171,7 @@ export default function ContactPage() {
                     <input id="phone" name="phone" type="tel" required placeholder="+880 1XXX-XXXXXX" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
-                  {/* Email */}
+                  {/* EMAIL */}
                   <div>
                     <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Email
@@ -176,7 +180,7 @@ export default function ContactPage() {
                     <input id="email" name="email" type="email" placeholder="you@example.com" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
-                  {/* Project type */}
+                  {/* PROJECT TYPE */}
                   <div>
                     <label htmlFor="projectType" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Project type *
@@ -195,7 +199,7 @@ export default function ContactPage() {
                     </select>
                   </div>
 
-                  {/* Budget */}
+                  {/* BUDGET */}
                   <div>
                     <label htmlFor="budget" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Budget
@@ -214,7 +218,7 @@ export default function ContactPage() {
                     </select>
                   </div>
 
-                  {/* Location */}
+                  {/* LOCATION */}
                   <div>
                     <label htmlFor="location" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Location
@@ -224,7 +228,7 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Message */}
+                {/* MESSAGE */}
                 <div className="mt-7">
                   <label htmlFor="message" className="text-xs font-semibold uppercase tracking-[0.16em]">
                     Tell us about your project *
@@ -233,8 +237,10 @@ export default function ContactPage() {
                   <textarea id="message" name="message" required rows={5} placeholder="Tell us about your space, requirements, timeline, and anything else we should know." className="mt-3 w-full resize-none border-b border-black/20 bg-transparent px-0 py-3 text-sm leading-6 outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                 </div>
 
+                {/* ERROR */}
                 {error && <div className="mt-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
+                {/* SUBMIT */}
                 <button type="submit" disabled={loading} className="mt-8 inline-flex w-full items-center justify-center gap-3 bg-[#111111] px-7 py-5 text-sm font-semibold text-white transition-colors hover:bg-[#F97316] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-[#111111] dark:hover:bg-[#F97316] dark:hover:text-white sm:w-auto">
                   {loading ? (
                     <>
@@ -253,6 +259,9 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {/* FOOTER */}
+      <Footer />
     </main>
   );
 }
