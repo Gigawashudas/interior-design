@@ -273,7 +273,16 @@ export default function AdminLeadsPage() {
         </div>
 
         <div className="mt-10 grid grid-cols-2 border-t border-black/10 dark:border-white/10 sm:grid-cols-3 lg:grid-cols-6">
-          <StatCard label="Total" value={counts.total} icon={<Users size={17} />} />
+          <StatCard
+            label="Total"
+            value={counts.total}
+            icon={<Users size={17} />}
+            active={statusFilter === "ALL" && !search}
+            onClick={() => {
+              setStatusFilter("ALL");
+              setSearch("");
+            }}
+          />
 
           <StatCard label="New" value={counts.new} icon={<Clock3 size={17} />} active={statusFilter === "NEW"} onClick={() => setStatusFilter(statusFilter === "NEW" ? "ALL" : "NEW")} />
 
