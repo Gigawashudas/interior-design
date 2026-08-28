@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowUpRight, Menu, X } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -85,3 +85,5 @@ export function Navbar() {
     </header>
   );
 }
+
+export default Navbar;

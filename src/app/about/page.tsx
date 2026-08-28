@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, CheckCircle2, Compass, Layers3, Sparkles } from "lucide-react";
+import { Navbar } from "@/components/navbar";
 
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 
 const values = [

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight, Building2, CheckCircle2, Home, Layers3, PenTool, Sparkles } from "lucide-react";
 
-import Navbar from "@/components/navbar";
+import { Navbar } from "@/components/navbar";
 import Footer from "@/components/footer";
 
 const services = [
