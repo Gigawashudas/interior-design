@@ -34,6 +34,7 @@ export function LeadForm() {
     };
 
     try {
+      // 1. Save lead to database
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
@@ -42,8 +43,40 @@ export function LeadForm() {
         body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to submit form");
+        throw new Error(result.message || "Failed to submit form");
+      }
+
+      // 2. Send email notification through Web3Forms
+      const emailResponse = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY,
+
+          subject: `New Lead: ${data.name} — ${data.projectType}`,
+
+          from_name: "FORM/SPACE Website",
+
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          projectType: data.projectType,
+          budget: data.budget,
+          location: data.location,
+          message: data.message,
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+
+      if (!emailResult.success) {
+        console.error("Web3Forms email error:", emailResult);
       }
 
       setSubmitted(true);

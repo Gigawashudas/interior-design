@@ -4,21 +4,9 @@ import { ArrowLeft, ArrowUpRight, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 
-const projectTypes = [
-  "Residential Design",
-  "Commercial Spaces",
-  "3D Visualization",
-  "Renovation",
-  "Other",
-];
+const projectTypes = ["Residential Design", "Commercial Spaces", "3D Visualization", "Renovation", "Other"];
 
-const budgets = [
-  "Under 10 Lakh",
-  "10–20 Lakh",
-  "20–30 Lakh",
-  "30–50 Lakh",
-  "50 Lakh+",
-];
+const budgets = ["Under 10 Lakh", "10–20 Lakh", "20–30 Lakh", "30–50 Lakh", "50 Lakh+"];
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -46,6 +34,7 @@ export default function ContactPage() {
     };
 
     try {
+      // 1. Save lead to database
       const response = await fetch("/api/leads", {
         method: "POST",
         headers: {
@@ -60,14 +49,41 @@ export default function ContactPage() {
         throw new Error(result.message || "Something went wrong.");
       }
 
+      // 2. Send email notification through Web3Forms
+      const emailResponse = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          access_key: process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY,
+
+          subject: `New Lead: ${data.name} — ${data.projectType}`,
+
+          from_name: "FORM/SPACE Website",
+
+          name: data.name,
+          phone: data.phone,
+          email: data.email,
+          projectType: data.projectType,
+          budget: data.budget,
+          location: data.location,
+          message: data.message,
+        }),
+      });
+
+      const emailResult = await emailResponse.json();
+
+      if (!emailResult.success) {
+        console.error("Web3Forms email error:", emailResult);
+      }
+
+      // 3. Show success even if email notification fails
       setSuccess(true);
       form.reset();
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -78,17 +94,11 @@ export default function ContactPage() {
       {/* Header */}
       <header className="border-b border-black/10 dark:border-white/10">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="text-lg font-bold tracking-tighter sm:text-xl"
-          >
+          <Link href="/" className="text-lg font-bold tracking-tighter sm:text-xl">
             FORM<span className="text-[#F97316]">/</span>SPACE
           </Link>
 
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#F97316]"
-          >
+          <Link href="/" className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-[#F97316]">
             <ArrowLeft size={16} />
             Back home
           </Link>
@@ -100,26 +110,16 @@ export default function ContactPage() {
         <div className="grid gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
           {/* Intro */}
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">
-              Start a project
-            </p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#F97316] sm:text-xs">Start a project</p>
 
             <h1 className="mt-5 max-w-xl font-display text-5xl font-medium leading-[0.95] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-              Let&apos;s create something{" "}
-              <span className="font-normal italic text-[#F97316]">
-                meaningful.
-              </span>
+              Let&apos;s create something <span className="font-normal italic text-[#F97316]">meaningful.</span>
             </h1>
 
-            <p className="mt-7 max-w-md text-sm leading-7 text-black/60 dark:text-white/60 sm:text-base">
-              Tell us about your project. We&apos;ll review your requirements
-              and get back to you to discuss the possibilities.
-            </p>
+            <p className="mt-7 max-w-md text-sm leading-7 text-black/60 dark:text-white/60 sm:text-base">Tell us about your project. We&apos;ll review your requirements and get back to you to discuss the possibilities.</p>
 
             <div className="mt-10 border-t border-black/10 pt-6 dark:border-white/10">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">
-                Studio
-              </p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-black/40 dark:text-white/40">Studio</p>
 
               <p className="mt-3 text-sm leading-6">
                 Dhaka, Bangladesh
@@ -135,108 +135,54 @@ export default function ContactPage() {
           <div>
             {success ? (
               <div className="border-t-4 border-[#F97316] pt-8">
-                <CheckCircle2
-                  size={42}
-                  strokeWidth={1.5}
-                  className="text-[#F97316]"
-                />
+                <CheckCircle2 size={42} strokeWidth={1.5} className="text-[#F97316]" />
 
-                <h2 className="mt-6 font-display text-3xl font-medium tracking-tight sm:text-4xl">
-                  Thank you.
-                </h2>
+                <h2 className="mt-6 font-display text-3xl font-medium tracking-tight sm:text-4xl">Thank you.</h2>
 
-                <p className="mt-4 max-w-md text-sm leading-7 text-black/60 dark:text-white/60">
-                  Your project inquiry has been received. We&apos;ll be in
-                  touch with you soon.
-                </p>
+                <p className="mt-4 max-w-md text-sm leading-7 text-black/60 dark:text-white/60">Your project inquiry has been received. We&apos;ll be in touch with you soon.</p>
 
-                <button
-                  type="button"
-                  onClick={() => setSuccess(false)}
-                  className="mt-8 inline-flex items-center gap-2 border-b border-black/30 pb-1 text-sm font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/30"
-                >
+                <button type="button" onClick={() => setSuccess(false)} className="mt-8 inline-flex items-center gap-2 border-b border-black/30 pb-1 text-sm font-semibold transition-colors hover:border-[#F97316] hover:text-[#F97316] dark:border-white/30">
                   Submit another inquiry
                   <ArrowUpRight size={15} />
                 </button>
               </div>
             ) : (
-              <form
-                onSubmit={handleSubmit}
-                className="border-t-4 border-[#F97316] pt-8"
-              >
+              <form onSubmit={handleSubmit} className="border-t-4 border-[#F97316] pt-8">
                 <div className="grid gap-7 sm:grid-cols-2">
                   {/* Name */}
                   <div>
-                    <label
-                      htmlFor="name"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="name" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Name *
                     </label>
 
-                    <input
-                      id="name"
-                      name="name"
-                      type="text"
-                      required
-                      placeholder="Your name"
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30"
-                    />
+                    <input id="name" name="name" type="text" required placeholder="Your name" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
                   {/* Phone */}
                   <div>
-                    <label
-                      htmlFor="phone"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="phone" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Phone *
                     </label>
 
-                    <input
-                      id="phone"
-                      name="phone"
-                      type="tel"
-                      required
-                      placeholder="+880 1XXX-XXXXXX"
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30"
-                    />
+                    <input id="phone" name="phone" type="tel" required placeholder="+880 1XXX-XXXXXX" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
                   {/* Email */}
                   <div>
-                    <label
-                      htmlFor="email"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="email" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Email
                     </label>
 
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="you@example.com"
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30"
-                    />
+                    <input id="email" name="email" type="email" placeholder="you@example.com" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
 
                   {/* Project type */}
                   <div>
-                    <label
-                      htmlFor="projectType"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="projectType" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Project type *
                     </label>
 
-                    <select
-                      id="projectType"
-                      name="projectType"
-                      required
-                      defaultValue=""
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors focus:border-[#F97316] dark:border-white/20 dark:bg-[#111111]"
-                    >
+                    <select id="projectType" name="projectType" required defaultValue="" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors focus:border-[#F97316] dark:border-white/20 dark:bg-[#111111]">
                       <option value="" disabled>
                         Select project type
                       </option>
@@ -251,19 +197,11 @@ export default function ContactPage() {
 
                   {/* Budget */}
                   <div>
-                    <label
-                      htmlFor="budget"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="budget" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Budget
                     </label>
 
-                    <select
-                      id="budget"
-                      name="budget"
-                      defaultValue=""
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors focus:border-[#F97316] dark:border-white/20 dark:bg-[#111111]"
-                    >
+                    <select id="budget" name="budget" defaultValue="" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors focus:border-[#F97316] dark:border-white/20 dark:bg-[#111111]">
                       <option value="" disabled>
                         Select budget
                       </option>
@@ -278,53 +216,26 @@ export default function ContactPage() {
 
                   {/* Location */}
                   <div>
-                    <label
-                      htmlFor="location"
-                      className="text-xs font-semibold uppercase tracking-[0.16em]"
-                    >
+                    <label htmlFor="location" className="text-xs font-semibold uppercase tracking-[0.16em]">
                       Location
                     </label>
 
-                    <input
-                      id="location"
-                      name="location"
-                      type="text"
-                      placeholder="Project location"
-                      className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30"
-                    />
+                    <input id="location" name="location" type="text" placeholder="Project location" className="mt-3 w-full border-b border-black/20 bg-transparent px-0 py-3 text-sm outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                   </div>
                 </div>
 
                 {/* Message */}
                 <div className="mt-7">
-                  <label
-                    htmlFor="message"
-                    className="text-xs font-semibold uppercase tracking-[0.16em]"
-                  >
+                  <label htmlFor="message" className="text-xs font-semibold uppercase tracking-[0.16em]">
                     Tell us about your project *
                   </label>
 
-                  <textarea
-                    id="message"
-                    name="message"
-                    required
-                    rows={5}
-                    placeholder="Tell us about your space, requirements, timeline, and anything else we should know."
-                    className="mt-3 w-full resize-none border-b border-black/20 bg-transparent px-0 py-3 text-sm leading-6 outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30"
-                  />
+                  <textarea id="message" name="message" required rows={5} placeholder="Tell us about your space, requirements, timeline, and anything else we should know." className="mt-3 w-full resize-none border-b border-black/20 bg-transparent px-0 py-3 text-sm leading-6 outline-none transition-colors placeholder:text-black/30 focus:border-[#F97316] dark:border-white/20 dark:placeholder:text-white/30" />
                 </div>
 
-                {error && (
-                  <div className="mt-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400">
-                    {error}
-                  </div>
-                )}
+                {error && <div className="mt-6 border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600 dark:text-red-400">{error}</div>}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="mt-8 inline-flex w-full items-center justify-center gap-3 bg-[#111111] px-7 py-5 text-sm font-semibold text-white transition-colors hover:bg-[#F97316] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-[#111111] dark:hover:bg-[#F97316] dark:hover:text-white sm:w-auto"
-                >
+                <button type="submit" disabled={loading} className="mt-8 inline-flex w-full items-center justify-center gap-3 bg-[#111111] px-7 py-5 text-sm font-semibold text-white transition-colors hover:bg-[#F97316] disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-[#111111] dark:hover:bg-[#F97316] dark:hover:text-white sm:w-auto">
                   {loading ? (
                     <>
                       <Loader2 size={17} className="animate-spin" />
